@@ -24,7 +24,18 @@
   "options_page": "options/wave-options.html",
   "content_scripts": [
     {
-      "matches": ["https://news.ycombinator.com/*"],
+      "matches": [
+        "*://news.ycombinator.com/*"
+        ,"*://twitter.com/*"
+        ,"*://www.google.com/*"
+        ,"*://alltop.com/"
+        ,"*://usepanda.com/*"
+        ,"*://*.designernews.co/*"
+        ,"*://medium.com/*" 
+        ,"*://www.inc.com/*"
+        ,"*://www.reddit.com/*"
+        ,"*://www.producthunt.com/*"         
+      ],
       "js": ["content.js"]
     }
   ], 
