@@ -11,10 +11,8 @@ function save_options() {
     // Update status to let user know options were saved.
     var status = document.getElementById('status');
     status.textContent = 'Saved!';
-    
   });
   }
-
 
 // Restores select box and checkbox state using the preferences
 // stored in chrome.storage.

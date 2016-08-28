@@ -30,20 +30,13 @@ chrome.runtime.onInstalled.addListener(function() {
           }
 
         if(s.message == "openLink"){
-          console.log("backgroundjs: openLink")
-          console.log("the tab id stored in the tag is "+s.tabId)
-
-//          var tabId = s.tabId.parseInt
-
-          // selectTab(tabId)
-
           var tabId = parseInt(s.tabId)
-          chrome.tabs.update(tabId, {selected:true})
-
-          // is there a tabId in the dataset?
-          // is that tab still around?
-          // yes, switch to that tab, sendResponse true
-          // no, sendResponse false
+          chrome.tabs.update(tabId, {selected:true}, function(tab){
+              console.log("what happens if this tab is not there?")
+              if(tab == null){
+                console.log("that tab is null, we should msg back or JUST open the link in a new tab")
+              }
+          })
         }
 
 	})
