@@ -33,10 +33,10 @@ function getPreferences(callback){
 }
 
 function handleSelection(s){
-	/// also install onclick on each. See how tthat's done in content.js
+	/// TODO: also install onclick on each. See how tthat's done in content.js
 	for (var i = 0; i < document.links.length; i++) {
 		var l = document.links[i]
-		if(s.containsNode(l)){			 
+		if(s.containsNode(l)){						 
 			openTab(l)			
 		}
 	}
@@ -66,7 +66,6 @@ function openTabsForAllLinksWithSelector(selector){
 	})
 }
 
-
 function openTab(elm){
 	console.log("openTab in open_urls sending message")
 	chrome.runtime.sendMessage(
@@ -82,5 +81,22 @@ function openTab(elm){
 		console.log("got response:", response)
 		// add the tabId to the element of elm
 		elm.dataset.tabId = response.tab.id
+
+		// add onClick handler to go to the tab instead
+		// TODO: check if the tab is still there, if not open blank
+		// maybe do that in the background script instead
+		elm.onclick = function(){
+			console.log("elm clicked")
+			chrome.runtime.sendMessage(
+				{
+					message:"openLink",
+					tabId: elm.dataset.tabId
+				},
+				function(response){
+					// done selecting tab
+				}
+			)
+			return false; // return true if tab not there
+		}
 	});
 }

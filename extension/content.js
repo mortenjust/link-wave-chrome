@@ -44,17 +44,6 @@ function prepareAllContentLinksWithSelector(selector){
 		elmLinkRel.setAttribute("href", elm.href)
 		document.getElementsByTagName('head')[0].appendChild(elmLinkRel);
 		
-		// the user clicked a link. 
-		elm.onclick = function(){ 
-			console.log("onclick on a link detected. Sending a message")
-			chrome.runtime.sendMessage({
-				message: "openLink", 
-				tabId: elm.dataset.tabId
-			}, 
-			function(response) {
-				
-			});
-			return false; }
 		
 	})
 }
