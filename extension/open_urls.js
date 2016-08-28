@@ -52,34 +52,35 @@ function openAllLinksOnDomain(domain){
 		function(response){			
 			console.log("back from background script. The selector for the domain is ")		
 			console.log(response.selector)			
-			openTabsForAllLinksWithSelector(selector)
+			openTabsForAllLinksWithSelector(response.selector)
 		}
 	)
 }
 
 function openTabsForAllLinksWithSelector(selector){	
+	console.log("openTabsForAllLinksWithSelector:"+selector)
 	document.querySelectorAll(selector).forEach((elm) => {
 		if (tabsOpened++ < maxTabs){
-			openTab(l)
+			openTab(elm)
 		}	
 	})
 }
 
 
-function openTab(l){
+function openTab(elm){
 	console.log("openTab in open_urls sending message")
 	chrome.runtime.sendMessage(
 		/// tabid here? , 		
 		{
 		message:"openTab", 
-		url: l.href
+		url: elm.href
 	}, 
 	function(response) {	
 		if (chrome.runtime.lastError) {                            
 				console.log("ERROR: ", chrome.runtime.lastError);
 		}
 		console.log("got response:", response)
-		// add the tabId to the element of l
-		l.dataset.tabId = response.tab.id
+		// add the tabId to the element of elm
+		elm.dataset.tabId = response.tab.id
 	});
 }
