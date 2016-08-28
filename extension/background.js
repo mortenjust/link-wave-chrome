@@ -7,10 +7,7 @@ chrome.runtime.onInstalled.addListener(function() {
                                      "id": "selection"})
 	chrome.contextMenus.onClicked.addListener(onContextClick);
 
-
-
-
-  console.log("eventPage: Adding listener now") // -----------
+  console.log("eventPage: Adding listener now") 
 	chrome.runtime.onMessage.addListener(
     function(s, sender, sendResponse){
 
