@@ -1,11 +1,10 @@
 console.log("prefetcher: We have a matching site")
 
-// populate linkSelector dictionary
-// duplicated in open_urls <<<<<------------------
-// put this in the backgroundscript instead and retreive with a message
-
-
 var domain = window.location.href.match(/:\/\/(.[^/]+)/)[1]
+
+chrome.runtime.sendMessage({
+	message:"maybeAutoLaunch"
+},function(response){})
 
 // grab the selectors stored in the background script
 chrome.runtime.sendMessage(
@@ -43,7 +42,5 @@ function prepareAllContentLinksWithSelector(selector){
 		elmLinkRel.setAttribute("rel", "prerender")
 		elmLinkRel.setAttribute("href", elm.href)
 		document.getElementsByTagName('head')[0].appendChild(elmLinkRel);
-		
-		
 	})
 }

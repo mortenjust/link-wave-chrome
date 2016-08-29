@@ -82,10 +82,12 @@ function openTab(elm){
 		// add the tabId to the element of elm
 		elm.dataset.tabId = response.tab.id
 
-		// add onClick handler to go to the tab instead
-		// TODO: check if the tab is still there, if not open blank
-		// maybe do that in the background script instead
-		elm.onclick = function(){
+		// TODO: check if the tab is still there, if not return false	
+		elm.onclick = clickHandler 
+	});
+
+	function clickHandler(){
+			var tabGone = false
 			console.log("elm clicked")
 			chrome.runtime.sendMessage(
 				{
@@ -93,10 +95,13 @@ function openTab(elm){
 					tabId: elm.dataset.tabId
 				},
 				function(response){
-					// done selecting tab
+					console.log("resp: ", response)
+					if(response.tabStillOpen==false){
+						// tab gone, open a new one
+						openTab(elm)										
+					}
 				}
-			)
-			return false; // return true if tab not there
+			)	
+			return false // suppress the link				
 		}
-	});
 }

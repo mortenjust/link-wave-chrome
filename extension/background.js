@@ -14,25 +14,30 @@ chrome.runtime.onInstalled.addListener(function() {
       // sendResponse({message:"here we are"})
 
       if(s.message == "openTab"){
-          		window.setTimeout(function(){
-                  openTab(s.url, function(tab){
-                    // we know we have tab.id here
-                    console.log("sendresponse:", tab.id)
-                    sendResponse({tab: tab})
-                  });
-          		}
-          			, 1000);
+            openTab(s.url, function(tab){
+              // we know we have tab.id here
+              console.log("sendresponse:", tab.id)
+              sendResponse({tab: tab})
+            });
           return true
           }
 
         if(s.message == "openLink"){
           var tabId = parseInt(s.tabId)
-          chrome.tabs.update(tabId, {selected:true}, function(tab){
-              console.log("what happens if this tab is not there?")
+          chrome.tabs.update(tabId, {selected:true}, function(tab){    
+              console.log("got this tab back:", tab)      
               if(tab == null){
-                console.log("that tab is null, we should msg back or JUST open the link in a new tab")
+                console.log("Tab not there, sending message back", sendResponse)
+                sendResponse({tabStillOpen:false})
+              } else {
+                sendResponse({tabStillOpen:true})
               }
           })
+          return true
+        }
+
+        if(s.message == "maybeAutoLaunch"){
+            maybeAutoLaunch()
         }
 
         if(s.message == "getLinkSelectors"){
@@ -45,18 +50,18 @@ chrome.runtime.onInstalled.addListener(function() {
 	})
 
 function getSelectorForDomain(domain){
-  console.log("bg getselectorfordomain")
+  console.log("bg getselectorfordomain: "+domain)
   var linkSelector = {}
   linkSelector["news.ycombinator.com"] = ".storylink"
   linkSelector["twitter.com"] = ".twitter-timeline-link"
-  linkSelector["google.com"] = "div.rc h3.r a"
+  linkSelector["www.google.com"] = "div.rc h3.r a"
   linkSelector["usepanda.com"] = "div.text-entry-content h2.article-title a.article-title-link"
-  linkSelector["designernews.co"] = "a.montana-item-title"
+  linkSelector["www.designernews.co"] = "a.montana-item-title"
   linkSelector["b.googleplex.com"] = "TODO:"
   linkSelector["inc.com"] = "div div div p a"
-  linkSelector["reddit.com"] = "p.title a.title.may-blank.outbound"
-  linkSelector["producthunt.com"] = "a[target=_blank].button_2I1re"
-	console.log("background: getting link selector for "+domain)
+  linkSelector["www.reddit.com"] = "p.title a.title.may-blank.outbound"
+  linkSelector["www.producthunt.com"] = "a[target=_blank].button_2I1re"
+	console.log("bg: link selector for "+domain+" is "+linkSelector[domain])
 	return linkSelector[domain]
 }
 
@@ -65,11 +70,15 @@ function selectTab(tabId){
 }
 
 function onContextClick(info, tab) {
-    chrome.tabs.executeScript(null,
+    launchAllTabs()
+};
+
+function launchAllTabs(){
+  chrome.tabs.executeScript(null,
        {file:"open_urls.js"},
        function(res){
        });
-};
+}
 
 function openTab(url, callback){
     var createProps = { url:url, active:false }
@@ -78,4 +87,39 @@ function openTab(url, callback){
       })
   }
 
-});
+function countOpenTabsInCurrentWindow(callback){
+  chrome.tabs.query(
+    {
+      currentWindow:true
+    }, function(res){            
+      callback(res.length)
+    })
+}
+
+function maybeAutoLaunch(){
+  getPreferences(function(items){
+     if(items.autoOpen){
+       console.log("bg, yes do auto open")
+       countOpenTabsInCurrentWindow(function(count){
+         console.log("there are tabs:"+count)
+         if(count==1){
+            launchAllTabs()
+          }
+       })
+     }
+  })
+
+}
+
+function getPreferences(callback){
+	chrome.storage.sync.get({
+		maxTabs: 10,
+		autoOpen: false
+	}, function(items) {		
+		callback(items)
+	});
+}
+
+
+
+}); // oninstalled listener
