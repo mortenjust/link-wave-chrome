@@ -109,7 +109,7 @@ function openTab(url, callback){
   // open a temporary page to activate the back button
     var newTabUrl = chrome.extension.getURL("new_tab.html")
 
-    var createProps = {url: newTabUrl, active:false}
+    var createProps = {url: newTabUrl, active:false, pinned:false}
      chrome.tabs.create(createProps, function(tab){
        window.setTimeout(function(){
         console.log("tab created, its url is "+tab.url+". now send to the right url")
@@ -122,7 +122,7 @@ function openTab(url, callback){
                 callback(tab)
               })
           })
-        }, 150) // the back butto' won't show up unless this delay
+        }, 250) // the back butto' won't show up unless this delay
       })      
   }
 
