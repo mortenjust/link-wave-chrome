@@ -1,6 +1,6 @@
 
 
-console.log("hello from new_tab.js. Sending messge")
+console.log("hello from new_tab.js. Sending message!")
 
 chrome.runtime.sendMessage(
     {
