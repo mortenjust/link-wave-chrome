@@ -7,6 +7,8 @@ chrome.runtime.onInstalled.addListener(function() {
                                      "id": "selection"})
 
 	chrome.contextMenus.onClicked.addListener(onContextClick);
+  
+  chrome.tabs.onUpdated.addListener(tabUpdated);
 
   console.log("eventPage: Adding listener now") 
 	chrome.runtime.onMessage.addListener(
@@ -107,9 +109,11 @@ function launchAllTabs(){
 
 function openTab(url, callback){
   // open a temporary page to activate the back button
+chrome.tabs.query({active:true, currentWindow:true}, function(motherTabs){
+    var motherTabId = motherTabs[0].id
     var newTabUrl = chrome.extension.getURL("new_tab.html")
-
-    var createProps = {url: newTabUrl, active:false, pinned:false}
+    
+    var createProps = {url: newTabUrl,active:false, openerTabId:motherTabId, pinned:false}
      chrome.tabs.create(createProps, function(tab){
        window.setTimeout(function(){
         console.log("tab created, its url is "+tab.url+". now send to the right url")
@@ -117,13 +121,13 @@ function openTab(url, callback){
           var updateProps = { url:url, active:false }
           chrome.tabs.update(tab.id, updateProps, function(tab){
               // get current tab as mother tab, and insert into KnownTabs
-              chrome.tabs.query({active:true, currentWindow:true}, function(motherTabs){
-                knownTabs[tab.id] = {motherId:motherTabs[0].id}
+                knownTabs[tab.id] = {motherId:motherTabId}
                 callback(tab)
-              })
-          })
-        }, 250) // the back butto' won't show up unless this delay
-      })      
+              
+          })    // 4. update and actually go to the site we want
+        }, 250) // 3. wait ms the back butto' won't show up unless this delay
+      })        // 2. create tab   
+    });         // 1. get openerTabId
   }
 
 function countOpenTabsInCurrentWindow(callback){
@@ -147,6 +151,13 @@ function maybeAutoLaunch(){
        })
      }
   })
+}
+
+function tabUpdated(tabId, changeInfo, tab){
+  if(changeInfo.status == "complete"){
+       console.log(tab.url+" just loaded. TODO: Send that info back to the parentTab")
+       console.log("do we have openertabId?", tab)
+    }
 }
 
 function getPreferences(callback){
