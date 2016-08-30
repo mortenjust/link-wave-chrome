@@ -1,3 +1,5 @@
+var knownTabs = [];
+
 chrome.runtime.onInstalled.addListener(function() {
   console.log("eventPage: adding stuff now")
   var id = chrome.contextMenus.create({"title": "Open selected links in new tabs",
@@ -47,6 +49,29 @@ chrome.runtime.onInstalled.addListener(function() {
             console.log("bg: sending back selector: "+selector)
             sendResponse({selector:selector})
         }
+
+        if(s.message == "newTabOpened"){
+            // get the active tab
+            
+            chrome.tabs.query({active:true, currentWindow:true}, function(thisTab){
+                var t = thisTab[0]
+                console.log("--newTabOpened for tabid:"+t.id)
+                var m = knownTabs[t.id].motherId
+                console.log("---its mother: ",m)
+                if(m!==null){
+                  console.log("SEND YOU BACK!")
+                  chrome.tabs.update(m, {selected:true})
+                  // somehow send window.history.forward() to this tab
+                  // let's return the mother fucker 
+                  sendResponse({goForward:true})                  
+                }
+                else {
+                  console.log("DON'T SEND YOU BACK")
+                  sendResponse({goForward:false})
+                }                
+            })
+            return true
+        }
 	})
 
 function getSelectorForDomain(domain){
@@ -77,14 +102,28 @@ function launchAllTabs(){
   chrome.tabs.executeScript(null,
        {file:"open_urls.js"},
        function(res){
-       });
+       });       
 }
 
 function openTab(url, callback){
-    var createProps = { url:url, active:false }
+  // open a temporary page to activate the back button
+    var newTabUrl = chrome.extension.getURL("new_tab.html")
+
+    var createProps = {url: newTabUrl, active:false}
      chrome.tabs.create(createProps, function(tab){
-        callback(tab)
-      })
+       window.setTimeout(function(){
+        console.log("tab created, its url is "+tab.url+". now send to the right url")
+        // tab created, now send it to the right url        
+          var updateProps = { url:url, active:false }
+          chrome.tabs.update(tab.id, updateProps, function(tab){
+              // get current tab as mother tab, and insert into KnownTabs
+              chrome.tabs.query({active:true, currentWindow:true}, function(motherTabs){
+                knownTabs[tab.id] = {motherId:motherTabs[0].id}
+                callback(tab)
+              })
+          })
+        }, 150) // the back butto' won't show up unless this delay
+      })      
   }
 
 function countOpenTabsInCurrentWindow(callback){
@@ -108,7 +147,6 @@ function maybeAutoLaunch(){
        })
      }
   })
-
 }
 
 function getPreferences(callback){
@@ -119,7 +157,4 @@ function getPreferences(callback){
 		callback(items)
 	});
 }
-
-
-
 }); // oninstalled listener

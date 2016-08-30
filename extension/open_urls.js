@@ -1,6 +1,7 @@
 console.log("open_urls launched")
 
 //// main
+// fuck, these need to be declared somewhere else.
 let maxTabs = 10
 let autoOpen = false
 var tabsOpened = 0
