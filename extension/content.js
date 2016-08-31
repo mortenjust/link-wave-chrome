@@ -20,6 +20,8 @@ chrome.runtime.sendMessage(
 	}
 )
 
+
+
 function prepareAllContentLinksWithSelector(selector){
 	document.querySelectorAll(selector).forEach((elm) => {
 		console.log("preparing link: "+elm.innerText)
@@ -31,7 +33,7 @@ function prepareAllContentLinksWithSelector(selector){
 		elmDns.setAttribute("href", elm.href.match(r)[1])
 		document.getElementsByTagName('head')[0].appendChild(elmDns);	
 
-		// prefetch 
+		// prefetch `
 		var elmPrefetch = document.createElement('link')
 		elmPrefetch.setAttribute("rel", "prefetch")
 		elmPrefetch.setAttribute("href", elm.href)

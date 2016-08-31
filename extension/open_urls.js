@@ -1,10 +1,12 @@
 console.log("open_urls launched")
 
 //// main
-// fuck, these need to be declared somewhere else.
-let maxTabs = 10
-let autoOpen = false
-var tabsOpened = 0
+
+	let maxTabs = 10
+	let autoOpen = false
+	var tabsOpened = 0
+	var tabLoadStateListenerInstalled = false
+
 
 // main --------------------------------------------------
 
@@ -12,7 +14,7 @@ getPreferences(function(items){
 		maxTabs = items.maxTabs;
 		autoOpen = items.autoOpen;
 		console.log("We have maxTabs of "+maxTabs)
-
+		listenForTabLoadState()
 		var s = window.getSelection()
 		if (s.isCollapsed) {	
 			var domain = window.location.href.match(/:\/\/(.[^/]+)/)[1]
@@ -20,6 +22,7 @@ getPreferences(function(items){
 		} else {
 			handleSelection(s)
 		}
+		
 })
 
 /// functions -----------------------------------
@@ -42,6 +45,57 @@ function handleSelection(s){
 		}
 	}
 }
+
+
+// ---- set up listeners : THIS ONE NEVER CALLED
+
+function listenForTabLoadState(){
+// if this listener is already there, abort
+
+	console.log("openurls:tabLoadStateListenerInstalled:"+tabLoadStateListenerInstalled)
+	if(tabLoadStateListenerInstalled){return}
+
+	console.log("openurls:installing onMessage listener")
+	chrome.runtime.onMessage.addListener(
+	function(request, sender, sendResponse) {
+		console.log("content script got a message", request)
+
+		// 🙏 > 👉 > 👍
+		// or ✊ > 👉 > 👍
+
+		tabId = request.tabId
+		switch (request.message) {
+			case "tabLoading":
+			// first create the sucker, then update it
+				createStateIconForTabId(tabId)
+				setStateIconForTabId(tabId, "✊")
+				break;
+			case "tabCompleted":
+				setStateIconForTabId(tabId, "👉")
+				break;			
+			default:
+				break;
+		}
+	});
+}
+
+function createStateIconForTabId(tabId){
+			var stateEl = document.querySelector("[data-tab-id='"+tabId+"'] span")
+			if(stateEl != null){return}
+			
+			var el = document.querySelector("[data-tab-id='"+tabId+"']")
+			var newEl = document.createElement("span")
+			el.insertBefore(newEl, el.firstChild)	
+}
+
+function setStateIconForTabId(tabId, icon){
+			// grab the element, it's the span in the damn
+			var stateEl = document.querySelector("[data-tab-id='"+tabId+"'] span")
+			stateEl.innerText = icon
+			console.log("crated this element", newEl)			
+}
+
+// -----
 
 function openAllLinksOnDomain(domain){
 	// grab the selectors stored in the background script
@@ -79,7 +133,7 @@ function openTab(elm){
 		if (chrome.runtime.lastError) {                            
 				console.log("ERROR: ", chrome.runtime.lastError);
 		}
-		console.log("got response:", response)
+		console.log("opentab/open-urls: got response:", response)
 		// add the tabId to the element of elm
 		elm.dataset.tabId = response.tab.id
 

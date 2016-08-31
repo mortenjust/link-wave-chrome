@@ -53,18 +53,15 @@ chrome.runtime.onInstalled.addListener(function() {
         }
 
         if(s.message == "newTabOpened"){
-            // get the active tab
-            
+            // get the active tab            
             chrome.tabs.query({active:true, currentWindow:true}, function(thisTab){
                 var t = thisTab[0]
-                console.log("--newTabOpened for tabid:"+t.id)
+                console.log("--newTabOpened. activeTab (mother):"+t.id)
                 var m = knownTabs[t.id].motherId
                 console.log("---its mother: ",m)
                 if(m!==null){
                   console.log("SEND YOU BACK!")
-                  chrome.tabs.update(m, {selected:true})
-                  // somehow send window.history.forward() to this tab
-                  // let's return the mother fucker 
+                  chrome.tabs.update(m, {selected:true})                          
                   sendResponse({goForward:true})                  
                 }
                 else {
@@ -109,10 +106,11 @@ function launchAllTabs(){
 
 function openTab(url, callback){
   // open a temporary page to activate the back button
+  console.log("bgjs:openTab")
 chrome.tabs.query({active:true, currentWindow:true}, function(motherTabs){
     var motherTabId = motherTabs[0].id
     var newTabUrl = chrome.extension.getURL("new_tab.html")
-    
+    console.log("1. mothertabid"+motherTabId)
     var createProps = {url: newTabUrl,active:false, openerTabId:motherTabId, pinned:false}
      chrome.tabs.create(createProps, function(tab){
        window.setTimeout(function(){
@@ -122,12 +120,13 @@ chrome.tabs.query({active:true, currentWindow:true}, function(motherTabs){
           chrome.tabs.update(tab.id, updateProps, function(tab){
               // get current tab as mother tab, and insert into KnownTabs
                 knownTabs[tab.id] = {motherId:motherTabId}
+                console.log("2. knowntabs", knownTabs)
                 callback(tab)
               
           })    // 4. update and actually go to the site we want
         }, 250) // 3. wait ms the back butto' won't show up unless this delay
       })        // 2. create tab   
-    });         // 1. get openerTabId
+    });         // 1. get current tab so we can put it into openerTabId/mother later
   }
 
 function countOpenTabsInCurrentWindow(callback){
@@ -154,9 +153,25 @@ function maybeAutoLaunch(){
 }
 
 function tabUpdated(tabId, changeInfo, tab){
+  var openerTab = tab.openerTabId       
+
+  switch (changeInfo.status) {
+    case "complete":
+       chrome.tabs.sendMessage(openerTab, {tabId:tab.id, message:"tabCompleted", tab:tab})
+      break;
+    case "loading":
+       chrome.tabs.sendMessage(openerTab, {tabId:tab.id, message:"tabLoading", tab:tab})
+       break;
+    default:
+      break;
+  }
+
+
+
   if(changeInfo.status == "complete"){
        console.log(tab.url+" just loaded. TODO: Send that info back to the parentTab")
-       console.log("do we have openertabId?", tab)
+       var openerTab = tab.openerTabId       
+       chrome.tabs.sendMessage(openerTab, {tabId:tab.id, message:"tabCompleted", tab:tab})
     }
 }
 
